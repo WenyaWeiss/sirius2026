@@ -22,4 +22,4 @@ echo "Environment ready. Activate it with:"
 echo "  source $VENV/bin/activate"
 echo
 echo "Then open the tutorial with:"
-echo "  jupyter lab $ROOT/sequence2function_interpretation_tutorial.ipynb"
+echo "  jupyter lab $ROOT/sequence_interpretation.ipynb"

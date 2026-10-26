@@ -21,7 +21,7 @@ git clone git@github.com:WenyaWeiss/sirius2026.git
 cd sirius2026
 bash scripts/setup.sh
 source .venv/bin/activate
-jupyter lab sequence2function_interpretation_tutorial.ipynb
+jupyter lab sequence_interpretation.ipynb
 ```
 
 `setup.sh` creates `.venv`, installs `requirements.txt`, and registers a
@@ -89,9 +89,9 @@ Then install and open the notebook:
 You can open the notebook through the Colab file browser, or use the GitHub
 notebook URL after the repository has been authorized:
 
-<https://colab.research.google.com/github/WenyaWeiss/sirius2026/blob/main/sequence2function_interpretation_tutorial.ipynb>
+<https://colab.research.google.com/github/WenyaWeiss/sirius2026/blob/main/sequence_interpretation.ipynb>
 
-The first notebook cell finds `/content/sirius2026` automatically. Google
+The notebook setup cell finds `/content/sirius2026` automatically. Google
 Drive is only mounted as a fallback when no local clone is found. **MacroAPE
 is deliberately disabled in Colab:** cached sequence+fitness entries are read
 from `annotations/precomputed_macroape.json`; an unknown sequence or fitness
@@ -112,6 +112,10 @@ uses tangermeme's built-in TOMTOM instead. No Java process is started in Colab.
   new sequence+fitness pairs;
 - renders ISM panels and motif-reference logo tables.
 
+The notebook contains only lightweight model/orchestration code. Seqlet matrix
+construction, MacroAPE execution, TOMTOM fallback, cache loading, and UPGMA
+clustering are imported from `sirius_annotation.py`.
+
 `tools/ape-3.0.6.jar` and `tools/BatchMacroapeVar.class` are included in the
 private repository. The bundled model architecture is
 `vendor/mpramnist/models/MPRALegNet.py`; installing the external `mpramnist`
@@ -120,8 +124,10 @@ package is not required.
 ## Repository layout
 
 ```text
-sequence2function_interpretation_tutorial.ipynb  # teaching notebook
+sequence_interpretation.ipynb                     # teaching notebook
+sirius_annotation.py                              # MacroAPE/TOMTOM/cache/UPGMA engine
 tutorial_plotting.py                              # all figure/logo rendering
+pics/                                              # notebook illustrations
 frameworks/                                       # five selected examples
 models/                                            # Agarwal checkpoint
 motifs/                                            # clustered HOCOMOCO v14 MEME

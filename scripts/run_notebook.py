@@ -8,9 +8,9 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
-NOTEBOOK = ROOT / "sequence2function_interpretation_tutorial.ipynb"
+NOTEBOOK = ROOT / "sequence_interpretation.ipynb"
 OUTPUT_DIR = ROOT / "runs"
-OUTPUT = OUTPUT_DIR / "sequence2function_interpretation_tutorial_executed.ipynb"
+OUTPUT = OUTPUT_DIR / "sequence_interpretation_executed.ipynb"
 
 
 def main() -> int:
@@ -20,6 +20,7 @@ def main() -> int:
     env = os.environ.copy()
     # The notebook selects cuda:0 when only one device is visible.
     env.setdefault("CUDA_VISIBLE_DEVICES", "0")
+    env["SIRIUS_ROOT"] = str(ROOT)
     command = [
         sys.executable,
         "-m",

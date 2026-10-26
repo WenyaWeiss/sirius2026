@@ -6,5 +6,5 @@ cd "${ROOT%/*}"
 rm -f "$OUT"
 zip -r "$OUT" "$(basename "$ROOT")" \
   -x '*/.git/*' '*/.venv/*' '*/__pycache__/*' '*/.ipynb_checkpoints/*' \
-     '*/runs/*' '*_executed.ipynb' '*.pyc'
+     '*/runs/*' '*_executed.ipynb' '*/precompute_*.ipynb' '*/colab_*_test.ipynb' '*.pyc'
 printf 'created %s\n' "$OUT"

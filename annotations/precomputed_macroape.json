@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "created_utc": "2026-10-25T22:44:39.900996+00:00",
-  "source": "sequence2function_interpretation_tutorial.ipynb",
+  "source": "sequence_interpretation.ipynb",
   "motif_source": "motifs/H14CORE-CLUSTERED_meme_format.meme",
   "motif_count": 648,
   "model_checkpoint": "models/epoch042-r0.79896.ckpt",
