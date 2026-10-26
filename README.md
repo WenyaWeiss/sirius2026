@@ -95,8 +95,12 @@ notebook URL after the repository has been authorized:
 
 <https://colab.research.google.com/github/WenyaWeiss/sirius2026/blob/main/sequence_interpretation.ipynb>
 
-The notebook setup cell finds `/content/sirius2026` automatically. Google
-Drive is only mounted as a fallback when no local clone is found. **MacroAPE
+The notebook setup cell finds `/content/sirius2026` automatically. It accepts
+only a complete repository clone containing `vendor/mpramnist`, `utils.py`,
+`sirius_annotation.py`, `models/`, `frameworks/`, and `motifs/`; an older
+`/content/drive/MyDrive/sirius_tutorial` folder is deliberately rejected.
+Google Drive is only mounted as a fallback when no complete local clone is
+found. **MacroAPE
 is deliberately disabled in Colab:** cached sequence+fitness entries are read
 from `annotations/precomputed_macroape.json`; an unknown sequence or fitness
 uses tangermeme's built-in TOMTOM instead. No Java process is started in Colab.
