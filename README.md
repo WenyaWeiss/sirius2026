@@ -109,7 +109,7 @@ built-in TOMTOM. No Java process is started in Colab.
 - clusters seqlets with average-linkage UPGMA at distance threshold `0.95`;
 - in Colab, uses the precomputed MacroAPE cache when available and TOMTOM for
   new sequence+fitness pairs;
-- renders ISM panels and motif-reference logo tables.
+- renders ISM panels with an input one-hot sequence logo and motif-reference tables with both raw and information-content (bits) logos.
 
 The notebook contains only lightweight model/orchestration code. Seqlet matrix
 construction, MacroAPE execution, TOMTOM fallback, cache loading, and UPGMA
