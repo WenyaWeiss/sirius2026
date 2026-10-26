@@ -35,7 +35,8 @@ running `scripts/setup.sh` or use the existing conda environment.
 The repository is private. Add a fine-grained GitHub token stored in a Colab
 Secret named `GITHUB_TOKEN` (Contents: Read-only for this repository), then
 open the notebook in Colab. Its first code cell clones the repository into
-`/content/sirius2026` and switches to that directory:
+`/content/sirius2026` (or fast-forwards an existing clone) and switches to that
+directory:
 
 ```python
 from google.colab import userdata
