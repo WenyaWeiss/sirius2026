@@ -8,6 +8,7 @@ used when available and new inputs use tangermeme's TOMTOM wrapper.
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import shutil
 import subprocess
@@ -92,11 +93,7 @@ def annotation_cache_key(sequence: str, fitness_name: str) -> str:
 
 
 def _detect_colab() -> bool:
-    try:
-        import google.colab  # noqa: F401
-        return True
-    except ImportError:
-        return False
+    return importlib.util.find_spec('google.colab') is not None
 
 
 class MotifAnnotator:
@@ -143,13 +140,9 @@ class MotifAnnotator:
               '| entries:', len(self.precomputed_cache.get('entries', {})))
 
     def _read_cache(self) -> dict:
-        try:
-            return json.loads(self.cache_path.read_text())
-        except FileNotFoundError:
+        if not self.cache_path.exists():
             return {'entries': {}}
-        except Exception as exc:
-            print(f'Could not read precomputed annotation cache: {exc}')
-            return {'entries': {}}
+        return json.loads(self.cache_path.read_text())
 
     def _cached_annotation(self, entry: dict) -> pd.DataFrame:
         rows = pd.DataFrame(entry.get('seqlets', []))

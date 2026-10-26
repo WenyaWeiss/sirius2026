@@ -1,63 +1,64 @@
-"""Logo and figure rendering helpers for the Sirius tutorial."""
+"""Figure and logo rendering helpers for the Sirius tutorial."""
 import base64
 from io import BytesIO
 
+import logomaker
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from IPython.display import display, HTML
-
-try:
-    import logomaker
-except ImportError:
-    logomaker = None
+from IPython.display import HTML, display
 
 BASES = 'ACGT'
 
 
 def logo_html(matrix, width=170):
-    """Render a (4, L) matrix as an inline PNG logo in HTML."""
     if hasattr(matrix, 'detach'):
         matrix = matrix.detach().cpu().numpy()
-    fig, ax = plt.subplots(figsize=(2.2, .65))
+    figure, axis = plt.subplots(figsize=(2.2, .65))
     logomaker.Logo(
         pd.DataFrame(np.asarray(matrix).T, columns=list(BASES)),
-        ax=ax, color_scheme='classic', stack_order='small_on_top',
+        ax=axis,
+        color_scheme='classic',
+        stack_order='small_on_top',
     )
-    ax.set_axis_off()
+    axis.set_axis_off()
     buffer = BytesIO()
-    fig.savefig(
-        buffer, format='png', dpi=130, bbox_inches='tight',
-        pad_inches=.02, transparent=True,
+    figure.savefig(
+        buffer,
+        format='png',
+        dpi=130,
+        bbox_inches='tight',
+        pad_inches=.02,
+        transparent=True,
     )
-    plt.close(fig)
+    plt.close(figure)
     encoded = base64.b64encode(buffer.getvalue()).decode()
     return f"<img src='data:image/png;base64,{encoded}' width='{width}'/>"
 
 
 def plot_ism_panels(attr, observed_attr, projected, seqlets, fitness_name):
-    """Two-panel ISM figure with seqlet spans."""
     logo_limit = max(float(np.max(np.abs(attr))) * 1.2, 1e-6)
     observed_logo_limit = max(float(np.max(np.abs(observed_attr))) * 1.2, 1e-6)
-    fig, axes = plt.subplots(
-        2, 1, figsize=(18, 7), sharex=True,
+    figure, axes = plt.subplots(
+        2,
+        1,
+        figsize=(18, 7),
+        sharex=True,
         gridspec_kw={'height_ratios': [2.2, 1.6]},
         constrained_layout=True,
     )
-    if logomaker is not None:
-        logomaker.Logo(
-            pd.DataFrame(attr.T, columns=list(BASES)),
-            ax=axes[0], color_scheme='classic',
-        )
-        axes[0].set_ylim(-logo_limit, logo_limit)
-        logomaker.Logo(
-            pd.DataFrame(observed_attr.T, columns=list(BASES)),
-            ax=axes[1], color_scheme='classic',
-        )
-        axes[1].set_ylim(-observed_logo_limit, observed_logo_limit)
-    else:
-        axes[0].plot(projected, color='#7c3aed')
-        axes[1].plot(projected, color='#7c3aed')
+    logomaker.Logo(
+        pd.DataFrame(attr.T, columns=list(BASES)),
+        ax=axes[0],
+        color_scheme='classic',
+    )
+    axes[0].set_ylim(-logo_limit, logo_limit)
+    logomaker.Logo(
+        pd.DataFrame(observed_attr.T, columns=list(BASES)),
+        ax=axes[1],
+        color_scheme='classic',
+    )
+    axes[1].set_ylim(-observed_logo_limit, observed_logo_limit)
     axes[0].set_title(f'ISM with hidden / hypothetical=True — {fitness_name}')
     axes[1].set_title('ISM without hidden / hypothetical=False')
     axes[0].set_ylabel('ISM')
@@ -65,14 +66,13 @@ def plot_ism_panels(attr, observed_attr, projected, seqlets, fitness_name):
     axes[1].set_xlabel('position in 200-nt insert')
     for _, row in seqlets.iterrows():
         start, end = int(row.start), int(row.end)
-        for ax in axes:
-            ax.axvspan(start, end, color='#f59e0b', alpha=.2)
+        for axis in axes:
+            axis.axvspan(start, end, color='#f59e0b', alpha=.2)
     axes[1].set_xlim(0, 200)
     plt.show()
 
 
 def motif_table_html(result, annotated, motif_db, motif_functions):
-    """Render observed ISM logos and nearest-reference motif logos as HTML."""
     rows = []
     for _, row in annotated.iterrows():
         options = row.get('motif_options', [])

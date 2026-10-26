@@ -79,12 +79,16 @@ del token
 del env["GIT_PASSWORD"]
 ```
 
-Then install and open the notebook:
+Then open the notebook:
 
 ```python
 %cd /content/sirius2026
-!python -m pip install -q -r requirements.txt
 ```
+
+The first executable notebook cell runs `!pip install -q -r requirements.txt`,
+so the dependencies are installed before the model imports. The notebook also
+contains the PNGs as attachments; the copies in `pics/` are kept as repository
+sources.
 
 You can open the notebook through the Colab file browser, or use the GitHub
 notebook URL after the repository has been authorized:
@@ -126,8 +130,9 @@ package is not required.
 ```text
 sequence_interpretation.ipynb                     # teaching notebook
 sirius_annotation.py                              # MacroAPE/TOMTOM/cache/UPGMA engine
+utils.py                                          # model, example, and ISM utilities
 tutorial_plotting.py                              # all figure/logo rendering
-pics/                                              # notebook illustrations
+pics/                                              # notebook illustration sources
 frameworks/                                       # five selected examples
 models/                                            # Agarwal checkpoint
 motifs/                                            # clustered HOCOMOCO v14 MEME
