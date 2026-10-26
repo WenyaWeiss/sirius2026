@@ -30,19 +30,12 @@ the second GPU; with one GPU it uses `cuda:0`; otherwise it runs on CPU.
 For a GPU-specific PyTorch build, install the appropriate PyTorch wheel before
 running `scripts/setup.sh` or use the existing conda environment.
 
-A headless smoke execution is available after installation:
-
-```bash
-python scripts/run_notebook.py
-```
-
-The executed notebook is written to `runs/` and is ignored by Git.
-
 ## Google Colab
 
-The repository is private, so first open a blank notebook at
-<https://colab.new> and clone it with a fine-grained GitHub token stored in a
-Colab Secret named `GITHUB_TOKEN` (Contents: Read-only for this repository):
+The repository is private. Add a fine-grained GitHub token stored in a Colab
+Secret named `GITHUB_TOKEN` (Contents: Read-only for this repository), then
+open the notebook in Colab. Its first code cell clones the repository into
+`/content/sirius2026` and switches to that directory:
 
 ```python
 from google.colab import userdata
@@ -79,13 +72,9 @@ del token
 del env["GIT_PASSWORD"]
 ```
 
-Then open the notebook:
-
-```python
-%cd /content/sirius2026
-```
-
-The first executable notebook cell runs `!pip install -q -r requirements.txt`,
+The first cell performs the clone and `%cd`; run the remaining cells from
+top to bottom. The next executable notebook cell runs
+`!pip install -q -r requirements.txt`,
 so the dependencies are installed before the model imports. The image cells
 load PNGs from the cloned `pics/` directory with `IPython.display.Image`, so
 Colab does not depend on relative Markdown or private GitHub image URLs.
@@ -100,10 +89,11 @@ only a complete repository clone containing `vendor/mpramnist`, `utils.py`,
 `sirius_annotation.py`, `models/`, `frameworks/`, and `motifs/`; an older
 `/content/drive/MyDrive/sirius_tutorial` folder is deliberately rejected.
 Google Drive is only mounted as a fallback when no complete local clone is
-found. **MacroAPE
-is deliberately disabled in Colab:** cached sequence+fitness entries are read
-from `annotations/precomputed_macroape.json`; an unknown sequence or fitness
-uses tangermeme's built-in TOMTOM instead. No Java process is started in Colab.
+found. **MacroAPE is deliberately disabled in Colab:** known sequence+fitness
+entries use the cached ISM arrays and MacroAPE motif matches from
+`annotations/precomputed_macroape.json`; an unknown sequence+fitness runs ISM
+on the selected device (CPU if no GPU is available) and uses tangermeme's
+built-in TOMTOM. No Java process is started in Colab.
 
 ## What the notebook does
 
@@ -145,7 +135,6 @@ annotations/precomputed_macroape.json              # five Colab cache entries
 vendor/mpramnist/                                  # bundled LegNet architecture
 examples/                                          # checked example figures/table
 scripts/setup.sh                                  # create .venv and install deps
-scripts/run_notebook.py                           # headless execution
 ```
 
 ## Model convention

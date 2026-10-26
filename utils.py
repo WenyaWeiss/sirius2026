@@ -102,6 +102,15 @@ def fitness_from_predictions(pred, name: str, cell_types):
     return pred[:, target_index] - other
 
 
+def _restore_ism_result(entry: Mapping) -> dict:
+    result = {
+        name: np.asarray(entry[name], dtype=np.float32)
+        for name in ('attr', 'observed_attr', 'projected', 'ism_track')
+    }
+    result['seqlets'] = pd.DataFrame(entry.get('seqlets', []))
+    return result
+
+
 def run_ism(
     sequence: str,
     fitness_name: str,
@@ -115,10 +124,20 @@ def run_ism(
     recursive_seqlets_fn: Callable,
     cache: dict,
     batch_size: int = 32,
+    precomputed_ism: Mapping[tuple[str, str], Mapping] | None = None,
+    dtype=None,
+    verbose: bool = False,
 ):
     key = (sequence, fitness_name)
     if key in cache:
         return cache[key]
+    if precomputed_ism is not None and key in precomputed_ism:
+        print('ISM: precomputed cache')
+        result = _restore_ism_result(precomputed_ism[key])
+        cache[key] = result
+        return result
+    if device == 'cpu':
+        print('ISM: cache miss -> CPU saturation mutagenesis; progress is enabled')
     x_full = add_assay_flanks(
         encode_core([sequence]), left_flank, right_flank
     ).to(device)
@@ -131,8 +150,9 @@ def run_ism(
         batch_size=batch_size,
         hypothetical=True,
         device=device,
-        verbose=False,
-    ).detach().cpu().numpy()[0]
+        dtype=dtype,
+        verbose=verbose,
+    ).detach().float().cpu().numpy()[0]
     observed_attr = saturation_mutagenesis_fn(
         head,
         x_full,
@@ -141,8 +161,9 @@ def run_ism(
         batch_size=batch_size,
         hypothetical=False,
         device=device,
-        verbose=False,
-    ).detach().cpu().numpy()[0]
+        dtype=dtype,
+        verbose=verbose,
+    ).detach().float().cpu().numpy()[0]
     ism_track = observed_attr.sum(axis=0)
     projected = ism_track
     seqlets = recursive_seqlets_fn(
