@@ -1,0 +1,13 @@
+# The LegNet architecture is bundled in vendor/mpramnist; no external mpramnist checkout is required.
+torch>=2.0,<3
+tangermeme==1.0.4
+logomaker==0.8.7
+numpy>=1.24,<3
+pandas>=2,<4
+matplotlib>=3.7,<4
+seaborn>=0.12,<1
+scikit-learn>=1.2,<2
+ipywidgets>=8,<9
+jupyterlab>=4,<5
+nbconvert>=7,<8
+ipykernel>=6,<8

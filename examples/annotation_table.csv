@@ -1,0 +1,19 @@
+example,fitness,seqlet,attribution,upgma_cluster,rank,motif,full_name,jaccard,metric
+HepG2-specific / MDLM gamma0,activity HepG2,176-191,3.584,c0,1,FOSL2,FOSL2.H14CORE.0.P.B,0.14,Jaccard
+HepG2-specific / MDLM gamma0,activity HepG2,176-191,3.584,c0,2,NF2L2,NF2L2.H14CORE.1.P.B,0.133,Jaccard
+HepG2-specific / MDLM gamma0,activity HepG2,176-191,3.584,c0,3,FOSB,FOSB.H14CORE.1.M.C,0.089,Jaccard
+HepG2-specific / MDLM gamma0,activity HepG2,164-176,2.126,c0,1,NF2L2,NF2L2.H14CORE.1.P.B,0.094,Jaccard
+HepG2-specific / MDLM gamma0,activity HepG2,164-176,2.126,c0,2,BATF,BATF.H14CORE.0.P.B,0.089,Jaccard
+HepG2-specific / MDLM gamma0,activity HepG2,164-176,2.126,c0,3,FOSL2,FOSL2.H14CORE.0.P.B,0.052,Jaccard
+HepG2-specific / MDLM gamma0,activity HepG2,88-95,1.175,c2,1,NF2L2,NF2L2.H14CORE.1.P.B,0.067,Jaccard
+HepG2-specific / MDLM gamma0,activity HepG2,88-95,1.175,c2,2,FOSL2,FOSL2.H14CORE.0.P.B,0.065,Jaccard
+HepG2-specific / MDLM gamma0,activity HepG2,88-95,1.175,c2,3,PITX2,PITX2.H14CORE.0.SM.B,0.062,Jaccard
+HepG2-specific / MDLM gamma0,activity HepG2,139-147,1.063,c1,1,ZBTB2,ZBTB2.H14CORE.0.SM.B,0.077,Jaccard
+HepG2-specific / MDLM gamma0,activity HepG2,50-59,1.255,c0,1,BATF,BATF.H14CORE.0.P.B,0.072,Jaccard
+HepG2-specific / MDLM gamma0,activity HepG2,50-59,1.255,c0,2,ZSA5C,ZSA5C.H14CORE.0.P.C,0.056,Jaccard
+HepG2-specific / MDLM gamma0,activity HepG2,50-59,1.255,c0,3,FOSL2,FOSL2.H14CORE.0.P.B,0.054,Jaccard
+K562-specific / permutator gamma0,activity K562,75-91,1.901,c1,1,NANOG,NANOG.H14CORE.0.P.B,0.134,Jaccard
+K562-specific / permutator gamma0,activity K562,75-91,1.901,c1,2,SOX10,SOX10.H14CORE.1.PSM.A,0.066,Jaccard
+K562-specific / permutator gamma0,activity K562,90-103,1.12,c2,1,LMX1B,LMX1B.H14CORE.0.P.C,0.08,Jaccard
+K562-specific / permutator gamma0,activity K562,90-103,1.12,c2,2,ZN362,ZN362.H14CORE.0.PSGI.A,0.066,Jaccard
+K562-specific / permutator gamma0,activity K562,12-28,1.823,c0,1,no match,,,Jaccard
