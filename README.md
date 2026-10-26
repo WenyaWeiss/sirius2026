@@ -86,9 +86,9 @@ Then open the notebook:
 ```
 
 The first executable notebook cell runs `!pip install -q -r requirements.txt`,
-so the dependencies are installed before the model imports. The notebook also
-contains the PNGs as attachments; the copies in `pics/` are kept as repository
-sources.
+so the dependencies are installed before the model imports. The image cells
+load PNGs from the cloned `pics/` directory with `IPython.display.Image`, so
+Colab does not depend on relative Markdown or private GitHub image URLs.
 
 You can open the notebook through the Colab file browser, or use the GitHub
 notebook URL after the repository has been authorized:
