@@ -1012,6 +1012,143 @@ def select_non_overlapping_macroape_hits(
     return selected
 
 
+def align_motif_pwm_to_seqlet(
+    sequence: str,
+    seqlet_start: int,
+    seqlet_end: int,
+    motif_matrix,
+) -> dict:
+    """Infer a consensus-aware motif offset and strand around one seqlet.
+
+    MacroAPE supplies motif similarity but no nucleotide offset or strand. The
+    shorter of the motif/seqlet intervals is therefore kept inside the longer
+    one while all allowed offsets and both PWM orientations are scored against
+    the actual DNA using PWM log-odds. The result is an approximate display
+    alignment, not an offset reported by MacroAPE.
+    """
+    sequence = str(sequence).upper()
+    if not 0 <= seqlet_start < seqlet_end <= len(sequence):
+        raise ValueError(
+            f'Invalid seqlet interval [{seqlet_start}:{seqlet_end}] for '
+            f'a {len(sequence)}-nt sequence'
+        )
+    invalid = sorted(set(sequence) - set(BASES))
+    if invalid:
+        raise ValueError(f'Unsupported sequence bases: {invalid}')
+
+    matrix = motif_matrix
+    if hasattr(matrix, 'detach'):
+        matrix = matrix.detach().cpu().numpy()
+    matrix = np.asarray(matrix, dtype=float)
+    if matrix.ndim != 2:
+        raise ValueError(f'Expected a 2D motif matrix, got {matrix.shape}')
+    if matrix.shape[0] != len(BASES):
+        if matrix.shape[1] == len(BASES):
+            matrix = matrix.T
+        else:
+            raise ValueError(
+                f'Expected four motif rows in A/C/G/T order, got {matrix.shape}'
+            )
+    if np.any(matrix < 0):
+        raise ValueError('Motif matrix contains negative values')
+    column_sums = matrix.sum(axis=0, keepdims=True)
+    if np.any(column_sums <= 0):
+        raise ValueError('Motif matrix contains an empty column')
+    forward = matrix / column_sums
+    motif_length = int(forward.shape[1])
+    if motif_length > len(sequence):
+        raise ValueError(
+            f'Motif length {motif_length} exceeds sequence length {len(sequence)}'
+        )
+
+    seqlet_length = seqlet_end - seqlet_start
+    if motif_length >= seqlet_length:
+        first_start = seqlet_end - motif_length
+        last_start = seqlet_start
+    else:
+        first_start = seqlet_start
+        last_start = seqlet_end - motif_length
+    first_start = max(0, first_start)
+    last_start = min(len(sequence) - motif_length, last_start)
+    if first_start <= last_start:
+        candidate_starts = range(first_start, last_start + 1)
+    else:
+        centered = round((seqlet_start + seqlet_end - motif_length) / 2)
+        candidate_starts = [
+            min(max(centered, 0), len(sequence) - motif_length)
+        ]
+
+    sequence_indices = np.asarray(
+        [BASE_TO_INDEX[base] for base in sequence],
+        dtype=int,
+    )
+    reverse = forward[[3, 2, 1, 0], ::-1]
+    seqlet_center = (seqlet_start + seqlet_end) / 2
+    best = None
+    positions = np.arange(motif_length)
+    for strand, oriented in (('+', forward), ('-', reverse)):
+        log_odds = np.log2(np.maximum(oriented, 1e-6) / .25)
+        for start in candidate_starts:
+            score = float(log_odds[
+                sequence_indices[start:start + motif_length],
+                positions,
+            ].sum())
+            center_distance = abs(
+                start + motif_length / 2 - seqlet_center
+            )
+            key = (score, -center_distance, strand == '+', -start)
+            if best is None or key > best[0]:
+                best = (key, start, strand, oriented)
+
+    _, start, strand, oriented = best
+    consensus = ''.join(
+        BASES[index] for index in oriented.argmax(axis=0)
+    )
+    return {
+        'start': int(start),
+        'end': int(start + motif_length),
+        'strand': strand,
+        'score': float(best[0][0]),
+        'matrix': np.asarray(oriented, dtype=float),
+        'consensus': consensus,
+        'motif_length': motif_length,
+    }
+
+
+def _assign_motif_logo_lanes(frame: pd.DataFrame):
+    """Assign overlapping true-width motif spans to stable vertical lanes."""
+    if frame.empty:
+        result = frame.copy()
+        result['logo_lane'] = pd.Series(dtype=int)
+        return result, 1
+    lane_ends = []
+    assignments = {}
+    ordered = frame.sort_values(
+        ['logo_start', 'logo_end', 'seqlet_index', 'full_name'],
+        kind='mergesort',
+    )
+    for index, row in ordered.iterrows():
+        start = float(row['logo_start'])
+        end = float(row['logo_end'])
+        lane = next(
+            (
+                lane_index
+                for lane_index, lane_end in enumerate(lane_ends)
+                if start >= lane_end
+            ),
+            None,
+        )
+        if lane is None:
+            lane = len(lane_ends)
+            lane_ends.append(end)
+        else:
+            lane_ends[lane] = end
+        assignments[index] = lane
+    result = frame.copy()
+    result['logo_lane'] = [assignments[index] for index in result.index]
+    return result, max(1, len(lane_ends))
+
+
 def render_position_aligned_macroape_logo(
     annotation_payload: Mapping,
     observed_attr,
@@ -1032,11 +1169,13 @@ def render_position_aligned_macroape_logo(
     horizontal_labels: bool = False,
     show_title_counts: bool = True,
 ) -> Path:
-    """Render selected motif logos at their seqlet positions on a 0–200 axis.
+    """Render sequence-aligned motif logos at true nucleotide width.
 
     MacroAPE returns pairwise similarity but no base-level offset or strand.
-    Consequently each reference logo is placed within its matched seqlet span;
-    this is position alignment, not an inferred nucleotide-level alignment.
+    For visualization, each PWM is therefore scanned across offsets constrained
+    by its matched seqlet in both orientations and placed at the maximum
+    sequence log-odds score. This is an approximate consensus-aware placement,
+    not an offset or strand reported by MacroAPE.
     """
     import logomaker
     import matplotlib.pyplot as plt
@@ -1077,9 +1216,38 @@ def render_position_aligned_macroape_logo(
     if not present_motifs:
         raise ValueError('No selected MacroAPE hits exceed the threshold')
 
-    motif_track_count = 1 if single_motif_track else len(present_motifs)
+    hits = hits.reset_index(drop=True)
+    alignment_matrices = {}
+    for hit_index, hit in hits.iterrows():
+        alignment = align_motif_pwm_to_seqlet(
+            sequence,
+            int(hit['start']),
+            int(hit['end']),
+            motif_db[hit['full_name']],
+        )
+        hits.at[hit_index, 'logo_start'] = alignment['start']
+        hits.at[hit_index, 'logo_end'] = alignment['end']
+        hits.at[hit_index, 'logo_strand'] = alignment['strand']
+        hits.at[hit_index, 'logo_alignment_score'] = alignment['score']
+        hits.at[hit_index, 'logo_motif_length'] = alignment['motif_length']
+        alignment_matrices[hit_index] = alignment['matrix']
+
+    if single_motif_track:
+        motif_hits, lane_count = _assign_motif_logo_lanes(
+            hits.sort_values(['logo_start', 'logo_end'])
+        )
+        track_groups = [('Motifs', motif_hits, lane_count)]
+    else:
+        track_groups = []
+        for motif in present_motifs:
+            motif_hits, lane_count = _assign_motif_logo_lanes(
+                hits[hits['motif'].str.upper().eq(motif.upper())]
+            )
+            track_groups.append((motif, motif_hits, lane_count))
+    motif_track_count = len(track_groups)
     if figure_height is None:
-        figure_height = max(8.0, 4.8 + 1.05 * motif_track_count)
+        effective_motif_rows = sum(group[2] for group in track_groups)
+        figure_height = max(8.0, 4.8 + 1.05 * effective_motif_rows)
     if figure_width <= 0:
         raise ValueError(f'figure_width must be positive, got {figure_width}')
     if figure_height <= 0:
@@ -1103,7 +1271,9 @@ def render_position_aligned_macroape_logo(
     left = outer[0].subgridspec(
         2 + motif_track_count,
         1,
-        height_ratios=[1.0, 1.8] + [1.25] * motif_track_count,
+        height_ratios=[1.0, 1.8] + [
+            1.25 * lane_count for _, _, lane_count in track_groups
+        ],
         hspace=.16,
     )
     if prediction_only_panel:
@@ -1213,14 +1383,7 @@ def render_position_aligned_macroape_logo(
     motif_color_index = {
         motif.upper(): index for index, motif in enumerate(present_motifs)
     }
-    if single_motif_track:
-        track_groups = [('Motifs', hits.sort_values(['start', 'end']))]
-    else:
-        track_groups = [
-            (motif, hits[hits['motif'].str.upper().eq(motif.upper())])
-            for motif in present_motifs
-        ]
-    for row_index, (track_label, motif_hits) in enumerate(track_groups):
+    for row_index, (track_label, motif_hits, lane_count) in enumerate(track_groups):
         track = figure.add_subplot(left[2 + row_index, 0], sharex=sequence_axis)
         track.set_xlim(0, len(sequence))
         track.set_ylim(0, 1)
@@ -1249,49 +1412,76 @@ def render_position_aligned_macroape_logo(
                 axis='x',
                 labelsize=6 if compact_vertical else None,
             )
-        for _, hit in motif_hits.iterrows():
+        for hit_index, hit in motif_hits.iterrows():
             start, end = int(hit['start']), int(hit['end'])
-            width = max((end - start) / len(sequence), 1 / len(sequence))
+            logo_start = float(hit['logo_start'])
+            logo_end = float(hit['logo_end'])
+            motif_length = int(hit['logo_motif_length'])
+            lane = int(hit['logo_lane'])
+            slot_height = .88 / lane_count
+            slot_bottom = .05 + lane * slot_height
+            inset_y = slot_bottom + .16 * slot_height
+            inset_height = .78 * slot_height
             color_index = motif_color_index[str(hit['motif']).upper()]
             color = motif_palette(color_index % 10)
             track.axvspan(start, end, color=color, alpha=.12)
             inset = track.inset_axes([
-                start / len(sequence),
-                .08,
-                width,
-                .84,
+                logo_start / len(sequence),
+                inset_y,
+                (logo_end - logo_start) / len(sequence),
+                inset_height,
             ])
-            matrix = motif_db[hit['full_name']]
-            if hasattr(matrix, 'detach'):
-                matrix = matrix.detach().cpu().numpy()
-            heights = information_content_matrix(np.asarray(matrix, dtype=float))
+            inset.patch.set_alpha(0)
+            inset.axvspan(
+                max(-.5, start - logo_start - .5),
+                min(motif_length - .5, end - logo_start - .5),
+                color=color,
+                alpha=.12,
+                zorder=0,
+            )
+            matrix = alignment_matrices[hit_index]
+            heights = information_content_matrix(matrix)
             logomaker.Logo(
                 pd.DataFrame(heights.T, columns=list(BASES)),
                 ax=inset,
                 color_scheme='classic',
                 stack_order='small_on_top',
             )
+            inset.set_xlim(-.5, motif_length - .5)
             inset.set_ylim(0, 2.05)
             inset.set_xticks([])
             inset.set_yticks([])
             for spine in inset.spines.values():
                 spine.set_color(color)
                 spine.set_linewidth(1.1)
-            label = f"J={float(hit['similarity']):.3f}"
+            strand = '+' if hit['logo_strand'] == '+' else '−'
+            label = f"{strand} · J={float(hit['similarity']):.3f}"
             if single_motif_track:
-                separator = ' · ' if horizontal_labels else '\n'
-                label = f"{hit['motif']}{separator}{label}"
-            inset.text(
-                .5,
-                -.04 if horizontal_labels else 1.02,
-                label,
-                transform=inset.transAxes,
-                ha='center',
-                va='top' if horizontal_labels else 'bottom',
-                fontsize=5 if horizontal_labels else 6,
-                color='#111827',
-                clip_on=False,
-            )
+                label = f"{hit['motif']} {label}"
+            if horizontal_labels:
+                track.text(
+                    (logo_start + logo_end) / 2,
+                    slot_bottom + .02 * slot_height,
+                    label,
+                    transform=track.get_xaxis_transform(),
+                    ha='center',
+                    va='bottom',
+                    fontsize=5,
+                    color='#111827',
+                    clip_on=False,
+                )
+            else:
+                inset.text(
+                    .5,
+                    1.02,
+                    label,
+                    transform=inset.transAxes,
+                    ha='center',
+                    va='bottom',
+                    fontsize=6,
+                    color='#111827',
+                    clip_on=False,
+                )
 
     if prediction_only_panel:
         display_title = annotation_payload.get('display_title')

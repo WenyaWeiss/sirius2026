@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-11-10T13:42:08+00:00",
+  "notebook": "interpretation_workshop.ipynb",
+  "notebook_sha256": "22e443b3967b4d43b76436f5cef85aa8868047f8b94ef19e58efd5e87b7a0f7e",
+  "motif_alignment": {
+    "method": "maximum PWM log-odds against actual DNA",
+    "orientations": [
+      "forward",
+      "reverse-complement"
+    ],
+    "offset_constraint": "shorter motif/seqlet interval remains inside the longer interval",
+    "render_width": "true PWM nucleotide width",
+    "overlap_handling": "greedy vertical lanes"
+  },
+  "public_colab_sync": {
+    "repository": "https://github.com/WenyaWeiss/sirius2026.git",
+    "first_run": "git clone --branch main --single-branch",
+    "repeat_run": "git pull --ff-only origin main",
+    "authentication_required": false,
+    "dedicated_cell_index": 0
+  },
+  "natural_ranks": [
+    74,
+    51,
+    119,
+    114,
+    150
+  ],
+  "generated_examples": [
+    "HepG2-specific / MDLM gamma0",
+    "K562-specific / MDLM gamma1",
+    "WTC11-specific / MDLM gamma0"
+  ],
+  "visible_assignment_order": [
+    1,
+    2,
+    3,
+    5
+  ]
+}
