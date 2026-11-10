@@ -137,7 +137,6 @@ package is not required.
 
 ```text
 interpretation_workshop.ipynb                     # main public Colab workshop
-sequence_interpretation.ipynb                     # foundational teaching notebook
 sirius_annotation.py                              # MacroAPE/TOMTOM/cache/UPGMA engine
 utils.py                                          # model, ISM, alignment, and rendering utilities
 tutorial_plotting.py                              # shared figure/logo helpers
