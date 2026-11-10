@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-11-10T12:52:33+00:00",
+  "notebook": "sequence_interpretation_teacher_final_h4_v3_executed.ipynb",
+  "notebook_sha256": "39bbde7eb2c8a0588d667757884c711cefb37840143054cf9a0272f3e2437b45",
+  "natural_ranks": [
+    74,
+    51,
+    119,
+    114,
+    150
+  ],
+  "natural_display_title": "lentiMPRA Agarwal",
+  "generated_examples": [
+    "HepG2-specific / MDLM gamma0",
+    "K562-specific / MDLM gamma1",
+    "WTC11-specific / MDLM gamma0"
+  ],
+  "removed_generated_examples": [
+    "K562-specific / permutator gamma0",
+    "K562-specific / MDLM gamma0 row 649"
+  ],
+  "visible_assignment_order": [
+    1,
+    2,
+    3,
+    5
+  ],
+  "task1_static_fallback": "HNF4A + FOSL2 table and PNG",
+  "figure_style": {
+    "tracks": [
+      "input sequence",
+      "observed ISM",
+      "position-aligned motif logos"
+    ],
+    "figure_width_inches": 14.0,
+    "figure_height_inches": 4.0,
+    "dpi": 300,
+    "prediction_panel": "narrow frameless panel",
+    "metadata_panel": false,
+    "alignment_note": false,
+    "ism_frame": false,
+    "motif_track_frame": false,
+    "motif_labels": "horizontal below logos"
+  },
+  "task1_consensuses": {
+    "HNF4A": "GGGTTCAAAGTCCAC",
+    "FOSL2/AP-1": "GGATGAGTCATC",
+    "GABPA": "AACCGGAAGTGG",
+    "CREB5": "AATGATGTCAT"
+  }
+}

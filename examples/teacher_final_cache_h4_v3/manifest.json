@@ -1,0 +1,90 @@
+{
+  "files": [
+    {
+      "path": "figures/generated_01_aligned.png",
+      "bytes": 437282,
+      "sha256": "f2f6b494da1ca019897487e73b56ef4d8cd98949f56b6327ac3d2e931e89bddf",
+      "width": 4236,
+      "height": 1234
+    },
+    {
+      "path": "figures/generated_02_aligned.png",
+      "bytes": 387368,
+      "sha256": "a9fe6bbb8bcf9bf5ae049fcd3f933d1649c61ac0a97a3f5a7d5e9f7be95be4a3",
+      "width": 4236,
+      "height": 1234
+    },
+    {
+      "path": "figures/generated_03_aligned.png",
+      "bytes": 421909,
+      "sha256": "d5f5e713816a5b0724da3278611ae451c8e4e9ed5f856aec6e2256944c4c75a6",
+      "width": 4236,
+      "height": 1234
+    },
+    {
+      "path": "figures/natural_rank_0051_aligned.png",
+      "bytes": 412119,
+      "sha256": "76a0f7e1636e01b62a862753036f4703a9782fcb795f47c3e8b5924dd85edd4d",
+      "width": 4235,
+      "height": 1234
+    },
+    {
+      "path": "figures/natural_rank_0074_aligned.png",
+      "bytes": 466365,
+      "sha256": "b46a2d34e3541d802c5b1dc5988399fad7fa048b60bb00c7f39fdf7d25d6428d",
+      "width": 4235,
+      "height": 1234
+    },
+    {
+      "path": "figures/natural_rank_0114_aligned.png",
+      "bytes": 397262,
+      "sha256": "1110cc74464ee01aa73a661aa6645293487d752da7bdff033c1e5ef56acb4d3f",
+      "width": 4236,
+      "height": 1234
+    },
+    {
+      "path": "figures/natural_rank_0119_aligned.png",
+      "bytes": 405613,
+      "sha256": "274ccebf4e6a73827551d6b22b8b5c3e771ae067230cd69b8ed8c1527637eb85",
+      "width": 4236,
+      "height": 1234
+    },
+    {
+      "path": "figures/natural_rank_0150_aligned.png",
+      "bytes": 360521,
+      "sha256": "9c1f9681d0ed1c2e2cee51f7cb9cddeab3b470ed7449a025a5984e06b70e3fb3",
+      "width": 4236,
+      "height": 1234
+    },
+    {
+      "path": "metadata.json",
+      "bytes": 1308,
+      "sha256": "60cfadc47ac5e6c1b4fa5a97217fbf7a2037d52830108df7da1ba6af1d85e755"
+    },
+    {
+      "path": "natural_annotations/rank_0051.json",
+      "bytes": 89659,
+      "sha256": "7219dd6d6e53d04f205015452541df49da6eefb1550d0d88db50d304d9e6d345"
+    },
+    {
+      "path": "natural_annotations/rank_0074.json",
+      "bytes": 131833,
+      "sha256": "ec850ef738b004d22544eb05e3e3749bdee60b7066a31100dc98a11f5dccc651"
+    },
+    {
+      "path": "natural_annotations/rank_0114.json",
+      "bytes": 88062,
+      "sha256": "cc71e1fb0edd8f2ba071d8ef451db08a23efd96116ca52ba9d01a74adaa3d787"
+    },
+    {
+      "path": "natural_annotations/rank_0119.json",
+      "bytes": 88399,
+      "sha256": "7a988eefbc0d125a29d3ef129032aa4ef9ba949031e726caff95aabf4c623289"
+    },
+    {
+      "path": "natural_annotations/rank_0150.json",
+      "bytes": 67109,
+      "sha256": "4b9f6db6c696b7106b4545eda265ae6864dd681f5f108bf3e47dd8e1961206c8"
+    }
+  ]
+}
