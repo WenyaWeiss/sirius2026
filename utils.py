@@ -499,6 +499,206 @@ def run_custom_sequence_widget(
         )
 
 
+def positioned_motif_hits_from_annotation(
+    annotated_seqlets,
+    *,
+    similarity_threshold: float = 0.05,
+    tomtom_p_threshold: float = 0.05,
+) -> pd.DataFrame:
+    """Convert one top motif per annotated seqlet into disjoint logo sites."""
+    from bisect import bisect_right
+    import json
+
+    columns = [
+        'seqlet_index', 'start', 'end', 'attribution', 'motif',
+        'full_name', 'similarity', 'metric', 'display_value',
+    ]
+    default_metric = str(
+        getattr(annotated_seqlets, 'attrs', {}).get('metric', 'similarity')
+    )
+    frame = pd.DataFrame(annotated_seqlets).reset_index(drop=True)
+    candidates = []
+    for seqlet_index, row in frame.iterrows():
+        options = row.get('motif_options', [])
+        if isinstance(options, str):
+            options = json.loads(options)
+        if not options:
+            continue
+        option = options[0]
+        full_name = option.get('full_name')
+        if not full_name:
+            continue
+        metric = str(option.get('metric', default_metric))
+        if 'p_value' in option:
+            display_value = float(option['p_value'])
+            if display_value > tomtom_p_threshold:
+                continue
+            similarity = 1.0 - min(max(display_value, 0.0), 1.0)
+        else:
+            similarity = float(option.get('similarity', 0.0))
+            display_value = similarity
+            if similarity <= similarity_threshold:
+                continue
+        candidates.append({
+            'seqlet_index': int(seqlet_index),
+            'start': int(row['start']),
+            'end': int(row['end']),
+            'attribution': float(row.get('attribution', 0.0)),
+            'motif': str(option.get('motif', full_name.split('.')[0])),
+            'full_name': str(full_name),
+            'similarity': similarity,
+            'metric': metric,
+            'display_value': display_value,
+        })
+    if not candidates:
+        return pd.DataFrame(columns=columns)
+
+    candidates = pd.DataFrame(candidates).sort_values(
+        ['end', 'start', 'similarity', 'full_name'],
+        ascending=[True, True, False, True],
+        kind='mergesort',
+    ).reset_index(drop=True)
+    ends = list(map(int, candidates['end']))
+    dynamic = [(0, 0.0, ())]
+    for index, row in candidates.iterrows():
+        predecessor = bisect_right(ends, int(row['start']), 0, index)
+        previous = dynamic[predecessor]
+        take = (
+            previous[0] + 1,
+            previous[1] + float(row['similarity']),
+            previous[2] + (index,),
+        )
+        skip = dynamic[index]
+        dynamic.append(take if take[:2] > skip[:2] else skip)
+    return candidates.iloc[list(dynamic[-1][2])].sort_values(
+        ['start', 'end', 'similarity', 'full_name'],
+        ascending=[True, True, False, True],
+        kind='mergesort',
+    ).reset_index(drop=True)
+
+
+def _validated_widget_sequence(value, label: str) -> str:
+    sequence = ''.join(str(value).upper().split())
+    if len(sequence) != 200:
+        raise ValueError(
+            f'{label}: ожидается 200 nt, получено {len(sequence)} nt.'
+        )
+    invalid = sorted(set(sequence) - set(BASES))
+    if invalid:
+        raise ValueError(f'{label}: недопустимые символы {invalid}.')
+    return sequence
+
+
+def run_sequence_pair_widget(
+    _,
+    *,
+    original_sequence_widget,
+    edited_sequence_widget,
+    fitness_widget,
+    output_widget,
+    clear_output_fn: Callable,
+    run_ism_fn: Callable,
+    predict_sequences_fn: Callable,
+    cell_types,
+    annotator,
+    motif_db: Mapping,
+    similarity_threshold: float = 0.05,
+):
+    """Render predictions and annotated ISM for original/edited sequences."""
+    from html import escape
+    from tempfile import TemporaryDirectory
+    from IPython.display import HTML, Image, display
+
+    with output_widget:
+        clear_output_fn(wait=True)
+        try:
+            original = _validated_widget_sequence(
+                original_sequence_widget.value,
+                'Исходная последовательность',
+            )
+            edited = _validated_widget_sequence(
+                edited_sequence_widget.value,
+                'Редактированная последовательность',
+            )
+        except ValueError as exc:
+            display(HTML(
+                '<p style="color:#b91c1c"><b>Ошибка:</b> '
+                f'{escape(str(exc))}</p>'
+            ))
+            return None
+
+        sequences = [original, edited]
+        labels = ['Исходная последовательность', 'Редактированная последовательность']
+        prediction_array = np.asarray(predict_sequences_fn(sequences), dtype=float)
+        if prediction_array.shape != (2, len(cell_types)):
+            raise ValueError(
+                f'Expected prediction shape (2, {len(cell_types)}), '
+                f'got {prediction_array.shape}'
+            )
+        changed_positions = sum(
+            first != second for first, second in zip(original, edited)
+        )
+        display(HTML(
+            '<p><b>Изменённых позиций:</b> '
+            f'{changed_positions} из 200</p>'
+        ))
+
+        fitness_name = str(fitness_widget.value)
+        with TemporaryDirectory(prefix='sirius-task1-') as directory:
+            for index, (label, sequence, prediction) in enumerate(zip(
+                labels,
+                sequences,
+                prediction_array,
+            )):
+                result = run_ism_fn(sequence, fitness_name)
+                annotated = annotator.annotate(
+                    result['attr'],
+                    result['seqlets'],
+                    sequence=sequence,
+                    fitness_name=fitness_name,
+                ).reset_index(drop=True)
+                positioned_hits = positioned_motif_hits_from_annotation(
+                    annotated,
+                    similarity_threshold=similarity_threshold,
+                )
+                annotation_payload = {
+                    'sequence': sequence,
+                    'seqlets': annotated.to_dict(orient='records'),
+                    'display_title': label,
+                }
+                output_path = Path(directory) / f'task1_{index}.png'
+                render_position_aligned_macroape_logo(
+                    annotation_payload,
+                    result['observed_attr'],
+                    motif_db,
+                    positioned_hits['motif'].drop_duplicates().tolist(),
+                    {
+                        cell_type: float(value)
+                        for cell_type, value in zip(cell_types, prediction)
+                    },
+                    output_path,
+                    threshold=similarity_threshold,
+                    dpi=200,
+                    positioned_hits=positioned_hits,
+                    single_motif_track=True,
+                    figure_width=14.0,
+                    figure_height=4.0,
+                    show_summary_panel=False,
+                    prediction_only_panel=True,
+                    vertical_prediction_bars=True,
+                    frameless=True,
+                    horizontal_labels=True,
+                    show_title_counts=False,
+                )
+                display(Image(filename=str(output_path), width=1600))
+
+        return {
+            'changed_positions': changed_positions,
+            'predictions': prediction_array,
+            'figure_count': 2,
+        }
+
+
 def render_annotated_ism_logo(
     sequence: str,
     observed_attr,
@@ -1165,6 +1365,7 @@ def render_position_aligned_macroape_logo(
     figure_height: float | None = None,
     show_summary_panel: bool = True,
     prediction_only_panel: bool = False,
+    vertical_prediction_bars: bool = False,
     frameless: bool = False,
     horizontal_labels: bool = False,
     show_title_counts: bool = True,
@@ -1213,10 +1414,18 @@ def render_position_aligned_macroape_logo(
         for motif in selected_motifs
         if not hits.empty and hits['motif'].str.upper().eq(str(motif).upper()).any()
     ]
-    if not present_motifs:
-        raise ValueError('No selected MacroAPE hits exceed the threshold')
+    if not present_motifs and not hits.empty:
+        raise ValueError('No selected motif names match the positioned hits')
 
     hits = hits.reset_index(drop=True)
+    if hits.empty:
+        hits = hits.assign(
+            logo_start=pd.Series(dtype=float),
+            logo_end=pd.Series(dtype=float),
+            logo_strand=pd.Series(dtype=str),
+            logo_alignment_score=pd.Series(dtype=float),
+            logo_motif_length=pd.Series(dtype=int),
+        )
     alignment_matrices = {}
     for hit_index, hit in hits.iterrows():
         alignment = align_motif_pwm_to_seqlet(
@@ -1262,7 +1471,9 @@ def render_position_aligned_macroape_logo(
         1,
         2,
         width_ratios=(
-            [6.4, 0.85]
+            [6.1, 1.15]
+            if prediction_only_panel and vertical_prediction_bars
+            else [6.4, 0.85]
             if prediction_only_panel
             else [5.8, 1.35] if show_summary_panel else [1.0, 0.0001]
         ),
@@ -1412,6 +1623,17 @@ def render_position_aligned_macroape_logo(
                 axis='x',
                 labelsize=6 if compact_vertical else None,
             )
+        if motif_hits.empty:
+            track.text(
+                .5,
+                .5,
+                'Нет аннотированных мотивов',
+                transform=track.transAxes,
+                ha='center',
+                va='center',
+                fontsize=7,
+                color='#64748b',
+            )
         for hit_index, hit in motif_hits.iterrows():
             start, end = int(hit['start']), int(hit['end'])
             logo_start = float(hit['logo_start'])
@@ -1455,7 +1677,17 @@ def render_position_aligned_macroape_logo(
                 spine.set_color(color)
                 spine.set_linewidth(1.1)
             strand = '+' if hit['logo_strand'] == '+' else '−'
-            label = f"{strand} · J={float(hit['similarity']):.3f}"
+            metric = str(hit.get('metric', 'Jaccard')).lower()
+            display_value = hit.get('display_value', hit['similarity'])
+            if pd.isna(display_value):
+                display_value = hit['similarity']
+            if metric == 'tomtom':
+                score_label = f'p={float(display_value):.1e}'
+            elif metric in {'corr', 'pearson'}:
+                score_label = f'r={float(hit["similarity"]):.3f}'
+            else:
+                score_label = f'J={float(hit["similarity"]):.3f}'
+            label = f'{strand} · {score_label}'
             if single_motif_track:
                 label = f"{hit['motif']} {label}"
             if horizontal_labels:
@@ -1501,33 +1733,68 @@ def render_position_aligned_macroape_logo(
             else '#16a34a'
             for name in cell_lines
         ]
-        bars = prediction_axis.barh(
-            cell_lines,
-            values,
-            color=bar_colors,
-            alpha=.88,
-        )
-        prediction_axis.axvline(0, color='#334155', linewidth=.6)
-        prediction_axis.invert_yaxis()
         prediction_axis.set_title('Predictions', fontsize=8)
-        prediction_axis.set_xlabel('score', fontsize=7)
-        prediction_axis.tick_params(labelsize=7)
-        span = max(float(values.max() - values.min()), 1.0)
+        span = max(
+            float(values.max() - values.min()),
+            float(np.max(np.abs(values))),
+            1.0,
+        )
         lower = min(float(values.min()), 0.0) - .2 * span
         upper = max(float(values.max()), 0.0) + .25 * span
-        prediction_axis.set_xlim(lower, upper)
+        if vertical_prediction_bars:
+            positions = np.arange(len(cell_lines))
+            bars = prediction_axis.bar(
+                positions,
+                values,
+                color=bar_colors,
+                alpha=.88,
+                width=.68,
+            )
+            prediction_axis.axhline(0, color='#334155', linewidth=.6)
+            prediction_axis.set_xticks(
+                positions,
+                cell_lines,
+                rotation=60,
+                ha='right',
+            )
+            prediction_axis.set_ylabel('score', fontsize=7)
+            prediction_axis.set_ylim(lower, upper)
+            prediction_axis.tick_params(labelsize=6)
+            offset = .025 * (upper - lower)
+            for bar, value in zip(bars, values):
+                prediction_axis.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    value + (offset if value >= 0 else -offset),
+                    f'{value:.3f}',
+                    ha='center',
+                    va='bottom' if value >= 0 else 'top',
+                    fontsize=6,
+                    fontweight='bold',
+                )
+        else:
+            bars = prediction_axis.barh(
+                cell_lines,
+                values,
+                color=bar_colors,
+                alpha=.88,
+            )
+            prediction_axis.axvline(0, color='#334155', linewidth=.6)
+            prediction_axis.invert_yaxis()
+            prediction_axis.set_xlabel('score', fontsize=7)
+            prediction_axis.set_xlim(lower, upper)
+            prediction_axis.tick_params(labelsize=7)
+            for bar, value in zip(bars, values):
+                prediction_axis.text(
+                    value + .025 * (upper - lower),
+                    bar.get_y() + bar.get_height() / 2,
+                    f'{value:.3f}',
+                    ha='left',
+                    va='center',
+                    fontsize=7,
+                    fontweight='bold',
+                )
         for spine in prediction_axis.spines.values():
             spine.set_visible(False)
-        for bar, value in zip(bars, values):
-            prediction_axis.text(
-                value + .025 * (upper - lower),
-                bar.get_y() + bar.get_height() / 2,
-                f'{value:.3f}',
-                ha='left',
-                va='center',
-                fontsize=7,
-                fontweight='bold',
-            )
         title = display_title
         if show_title_counts:
             title += (
