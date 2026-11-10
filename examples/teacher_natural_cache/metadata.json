@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-11-10T09:06:00Z",
+  "elapsed_seconds": 45.90730094909668,
+  "device": "cuda:1",
+  "checkpoint_epoch": 42,
+  "source_table": "examples/agarwaljoint_real_examples.tsv",
+  "source_table_sha256": "ffb22d17822bff92dad82348ed29f412479a2a305989be6a1a6cc978eba233c1",
+  "ranks_in_order": [
+    74,
+    51,
+    119,
+    114,
+    150
+  ],
+  "fitness": "activity HepG2"
+}

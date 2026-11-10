@@ -1,0 +1,57 @@
+{
+  "annotation_mode": "TOMTOM",
+  "seqlets": [
+    {
+      "start": 173,
+      "end": 181,
+      "attribution": 1.0006192326545715,
+      "motif_names": "ZN284",
+      "motif_options": [
+        {
+          "motif": "ZN284",
+          "full_name": "ZN284.H14CORE.0.P.C",
+          "p_value": 7.765861436963722e-05,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "CEBPG",
+          "full_name": "CEBPG.H14CORE.0.P.B",
+          "p_value": 0.0007635378144043636,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "MTF1",
+          "full_name": "MTF1.H14CORE.0.SM.B",
+          "p_value": 0.0009130266880154371,
+          "metric": "TOMTOM"
+        }
+      ]
+    },
+    {
+      "start": 126,
+      "end": 147,
+      "attribution": 4.285156548023224,
+      "motif_names": "FOSL2",
+      "motif_options": [
+        {
+          "motif": "FOSL2",
+          "full_name": "FOSL2.H14CORE.0.P.B",
+          "p_value": 2.1994108879245744e-06,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "ZN174",
+          "full_name": "ZN174.H14CORE.0.M.C",
+          "p_value": 0.0002809949470931413,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "NF2L2",
+          "full_name": "NF2L2.H14CORE.1.P.B",
+          "p_value": 0.0005052182622650384,
+          "metric": "TOMTOM"
+        }
+      ]
+    }
+  ]
+}

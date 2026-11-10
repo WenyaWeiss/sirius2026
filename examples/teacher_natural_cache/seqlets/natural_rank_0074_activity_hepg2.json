@@ -1,0 +1,40 @@
+{
+  "seqlets": [
+    {
+      "example_idx": 0,
+      "start": 107,
+      "end": 121,
+      "attribution": 1.6676326394081116
+    },
+    {
+      "example_idx": 0,
+      "start": 163,
+      "end": 174,
+      "attribution": 0.8268722891807556
+    },
+    {
+      "example_idx": 0,
+      "start": 148,
+      "end": 160,
+      "attribution": 1.2358128428459167
+    },
+    {
+      "example_idx": 0,
+      "start": 126,
+      "end": 133,
+      "attribution": 0.455655574798584
+    },
+    {
+      "example_idx": 0,
+      "start": 16,
+      "end": 25,
+      "attribution": 0.7816652655601501
+    },
+    {
+      "example_idx": 0,
+      "start": 2,
+      "end": 10,
+      "attribution": 0.5069246292114258
+    }
+  ]
+}

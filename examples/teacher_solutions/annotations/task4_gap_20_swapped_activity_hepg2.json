@@ -1,0 +1,83 @@
+{
+  "annotation_mode": "TOMTOM",
+  "seqlets": [
+    {
+      "start": 91,
+      "end": 99,
+      "attribution": 0.5132187902927399,
+      "motif_names": "HNF4A",
+      "motif_options": [
+        {
+          "motif": "HNF4A",
+          "full_name": "HNF4A.H14CORE.0.PSM.A",
+          "p_value": 5.249352490609521e-05,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "TF7L1",
+          "full_name": "TF7L1.H14CORE.0.PM.A",
+          "p_value": 0.000567938455272216,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "ERR1",
+          "full_name": "ERR1.H14CORE.0.PSM.A",
+          "p_value": 0.0006514145319662283,
+          "metric": "TOMTOM"
+        }
+      ]
+    },
+    {
+      "start": 53,
+      "end": 70,
+      "attribution": 2.684726595878601,
+      "motif_names": "FOSL2",
+      "motif_options": [
+        {
+          "motif": "FOSL2",
+          "full_name": "FOSL2.H14CORE.0.P.B",
+          "p_value": 1.1927428813776692e-06,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "NF2L2",
+          "full_name": "NF2L2.H14CORE.1.P.B",
+          "p_value": 9.151169471253245e-05,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "ZNF90",
+          "full_name": "ZNF90.H14CORE.0.P.C",
+          "p_value": 0.00016074300674167403,
+          "metric": "TOMTOM"
+        }
+      ]
+    },
+    {
+      "start": 31,
+      "end": 39,
+      "attribution": 0.5290162116289139,
+      "motif_names": "Z286B",
+      "motif_options": [
+        {
+          "motif": "Z286B",
+          "full_name": "Z286B.H14CORE.0.PSG.A",
+          "p_value": 0.00011994225425267764,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "PIT1",
+          "full_name": "PIT1.H14CORE.0.SM.B",
+          "p_value": 0.0002108693943471508,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "NKX61",
+          "full_name": "NKX61.H14CORE.1.P.B",
+          "p_value": 0.0005574386684517359,
+          "metric": "TOMTOM"
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 """Figure and logo rendering helpers for the Sirius tutorial."""
 import base64
 from io import BytesIO
+from pathlib import Path
 
 import logomaker
 import matplotlib.pyplot as plt
@@ -99,6 +100,9 @@ def plot_ism_panels(
     seqlets,
     fitness_name,
     sequence=None,
+    *,
+    output_path=None,
+    show=True,
 ):
     logo_limit = max(float(np.max(np.abs(attr))) * 1.2, 1e-6)
     observed_logo_limit = max(float(np.max(np.abs(observed_attr))) * 1.2, 1e-6)
@@ -108,7 +112,7 @@ def plot_ism_panels(
     figure, axes = plt.subplots(
         axes_count,
         1,
-        figsize=(18, 8 if has_sequence_track else 7),
+        figsize=(18, 6.5 if has_sequence_track else 5.5),
         sharex=True,
         gridspec_kw={'height_ratios': height_ratios},
         constrained_layout=True,
@@ -164,7 +168,20 @@ def plot_ism_panels(
         for axis in axes:
             axis.axvspan(start, end, color='#f59e0b', alpha=.2)
     ism_axes[1].set_xlim(0, attr.shape[1])
-    plt.show()
+    if output_path is not None:
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        figure.savefig(
+            output_path,
+            dpi=140,
+            bbox_inches='tight',
+            facecolor='white',
+        )
+    if show:
+        plt.show()
+    else:
+        plt.close(figure)
+    return figure
 
 
 def motif_table_html(result, annotated, motif_db, motif_functions):

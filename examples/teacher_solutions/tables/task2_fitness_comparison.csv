@@ -1,0 +1,5 @@
+fitness,run_key,positive_peak_position,positive_peak_value,negative_peak_position,negative_peak_value,seqlet_count,top_motifs
+activity HepG2,task1_both_activity_hepg2,139,0.8490102291107178,59,-0.11230504512786865,1,FOSL2
+activity K562,task2_activity_k562,136,0.0937640517950058,105,-0.14539772272109985,2,ZN606; FOSL2
+activity WTC11,task2_activity_wtc11,140,0.18398165702819824,157,-0.14330272376537323,1,FOSL2
+HepG2 - K562,task2_hepg2_minus_k562,139,0.8144462704658508,7,-0.12925440073013306,1,FOSL2

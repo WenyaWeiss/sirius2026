@@ -1,0 +1,31 @@
+{
+  "annotation_mode": "TOMTOM",
+  "seqlets": [
+    {
+      "start": 127,
+      "end": 147,
+      "attribution": 5.703525900840759,
+      "motif_names": "FOSL2",
+      "motif_options": [
+        {
+          "motif": "FOSL2",
+          "full_name": "FOSL2.H14CORE.0.P.B",
+          "p_value": 1.990506326995205e-06,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "ZN174",
+          "full_name": "ZN174.H14CORE.0.M.C",
+          "p_value": 0.00023919904015829593,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "NF2L2",
+          "full_name": "NF2L2.H14CORE.1.P.B",
+          "p_value": 0.00044423079543426993,
+          "metric": "TOMTOM"
+        }
+      ]
+    }
+  ]
+}

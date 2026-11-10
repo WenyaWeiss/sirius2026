@@ -1,0 +1,28 @@
+{
+  "seqlets": [
+    {
+      "example_idx": 0,
+      "start": 123,
+      "end": 134,
+      "attribution": 2.389730453491211
+    },
+    {
+      "example_idx": 0,
+      "start": 147,
+      "end": 154,
+      "attribution": 1.3743146359920502
+    },
+    {
+      "example_idx": 0,
+      "start": 36,
+      "end": 52,
+      "attribution": 3.928880751132965
+    },
+    {
+      "example_idx": 0,
+      "start": 70,
+      "end": 85,
+      "attribution": 3.3839898705482483
+    }
+  ]
+}

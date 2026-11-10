@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -107,6 +108,8 @@ class MotifAnnotator:
         *,
         in_colab: bool | None = None,
         java_bin: str | None = None,
+        distance_cache_dir: str | Path | None = None,
+        compare_seqlets: bool = True,
     ):
         self.motif_db = motif_db
         self.motif_keys = list(motif_db)
@@ -114,10 +117,17 @@ class MotifAnnotator:
                           for name in self.motif_keys}
         self.repo_root = Path(repo_root).resolve()
         self.encode_core = encode_core
+        self.compare_seqlets = bool(compare_seqlets)
         self.in_colab = _detect_colab() if in_colab is None else bool(in_colab)
         self.cache_path = self.repo_root / 'annotations' / 'precomputed_macroape.json'
         self.precomputed_cache = self._read_cache()
         self.tools_dir = self.repo_root / 'tools'
+        self.distance_cache_dir = (
+            Path(distance_cache_dir).resolve()
+            if distance_cache_dir is not None else None
+        )
+        if self.distance_cache_dir is not None:
+            self.distance_cache_dir.mkdir(parents=True, exist_ok=True)
         if java_bin:
             self.java_bin = shutil.which(java_bin)
             if self.java_bin is None and Path(java_bin).is_file():
@@ -138,6 +148,8 @@ class MotifAnnotator:
             print('MacroAPE: unavailable -> Pearson fallback')
         print('Precomputed cache:', self.cache_path,
               '| entries:', len(self.precomputed_cache.get('entries', {})))
+        if self.distance_cache_dir is not None:
+            print('MacroAPE distance cache:', self.distance_cache_dir)
 
     def _read_cache(self) -> dict:
         if not self.cache_path.exists():
@@ -212,8 +224,71 @@ class MotifAnnotator:
             out.attrs['annotation_mode'] = 'TOMTOM unavailable'
             return out
 
+    def _macroape_cache_path(self, ppms, pairs) -> Path | None:
+        if self.distance_cache_dir is None:
+            return None
+        digest = hashlib.sha256()
+        digest.update(
+            b'macroape-distance-cache-v1|ppm|position=all,direct|p=0.001|'
+            b'first-effective-count=100000|second-effective-count=100000'
+        )
+        for key in sorted(ppms):
+            matrix = np.asarray(ppms[key], dtype='<f8', order='C')
+            digest.update(key.encode())
+            digest.update(np.asarray(matrix.shape, dtype='<i8').tobytes())
+            digest.update(matrix.tobytes())
+        for first, second in pairs:
+            digest.update(first.encode())
+            digest.update(b'\0')
+            digest.update(second.encode())
+            digest.update(b'\0')
+        return self.distance_cache_dir / f'{digest.hexdigest()}.json'
+
+    def _read_macroape_distance_cache(self, cache_path: Path | None):
+        if cache_path is None or not cache_path.exists():
+            return None
+        try:
+            payload = json.loads(cache_path.read_text())
+            if payload.get('schema_version') != 1:
+                return None
+            distances = {
+                (first, second): float(distance)
+                for first, second, distance in payload.get('distances', [])
+            }
+            print('MacroAPE distance cache hit:', cache_path.name)
+            return distances
+        except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
+            print(f'Ignoring unreadable MacroAPE distance cache {cache_path}: {exc}')
+            return None
+
+    def _write_macroape_distance_cache(
+        self,
+        cache_path: Path | None,
+        distances: dict,
+        failures: int,
+    ) -> None:
+        if cache_path is None:
+            return
+        payload = {
+            'schema_version': 1,
+            'failures': int(failures),
+            'distances': [
+                [first, second, float(distance)]
+                for (first, second), distance in sorted(distances.items())
+            ],
+        }
+        temporary = cache_path.with_name(
+            f'.{cache_path.name}.{os.getpid()}.tmp'
+        )
+        temporary.write_text(json.dumps(payload, separators=(',', ':')))
+        os.replace(temporary, cache_path)
+
     def _macroape_run(self, ppms: dict[str, np.ndarray], pairs: list[tuple[str, str]]) -> dict:
-        """Run one batched MacroAPE process and return pairwise distances."""
+        """Run one batched MacroAPE process with an optional persistent cache."""
+        cache_path = self._macroape_cache_path(ppms, pairs)
+        cached = self._read_macroape_distance_cache(cache_path)
+        if cached is not None:
+            return cached
         with tempfile.TemporaryDirectory() as tmp_name:
             tmp = Path(tmp_name)
             for key, ppm in ppms.items():
@@ -252,6 +327,9 @@ class MotifAnnotator:
                 distances[(first[:-4], second[:-4])] = float(distance)
             if failures:
                 print(f'MacroAPE: {failures} pair comparisons failed (treated as no similarity)')
+            self._write_macroape_distance_cache(
+                cache_path, distances, failures
+            )
             return distances
 
     def _annotate_macroape_or_pearson(self, attr: np.ndarray,
@@ -284,24 +362,27 @@ class MotifAnnotator:
                 for i in range(n_seqlets)
                 for j in range(len(self.motif_keys))
             ]
-            pairs += [
-                (f's{i}', f's{k}')
-                for i in range(n_seqlets)
-                for k in range(i + 1, n_seqlets)
-            ]
+            if self.compare_seqlets:
+                pairs += [
+                    (f's{i}', f's{k}')
+                    for i in range(n_seqlets)
+                    for k in range(i + 1, n_seqlets)
+                ]
             distances = self._macroape_run(ppms, pairs)
             reference_similarity = [
                 [1.0 - distances.get((f's{i}', f'm{j}'), 1.0)
                  for j in range(len(self.motif_keys))]
                 for i in range(n_seqlets)
             ]
-            seqlet_distances = np.zeros((n_seqlets, n_seqlets))
-            for i in range(n_seqlets):
-                for k in range(i + 1, n_seqlets):
-                    distance = distances.get((f's{i}', f's{k}'))
-                    seqlet_distances[i, k] = seqlet_distances[k, i] = (
-                        1.0 if distance is None else distance
-                    )
+            seqlet_distances = None
+            if self.compare_seqlets:
+                seqlet_distances = np.zeros((n_seqlets, n_seqlets))
+                for i in range(n_seqlets):
+                    for k in range(i + 1, n_seqlets):
+                        distance = distances.get((f's{i}', f's{k}'))
+                        seqlet_distances[i, k] = seqlet_distances[k, i] = (
+                            1.0 if distance is None else distance
+                        )
             metric = 'Jaccard'
             annotation_mode = 'MacroAPE'
         else:
@@ -312,16 +393,18 @@ class MotifAnnotator:
                  for motif_pwm in motif_pwms]
                 for seqlet_pwm in seqlet_pwms
             ]
-            seqlet_distances = np.zeros((n_seqlets, n_seqlets))
-            for i in range(n_seqlets):
-                for k in range(i + 1, n_seqlets):
-                    distance = min(
-                        1.0,
-                        max(0.0, 1.0 - best_alignment_similarity(
-                            seqlet_pwms[i], seqlet_pwms[k]
-                        )),
-                    )
-                    seqlet_distances[i, k] = seqlet_distances[k, i] = distance
+            seqlet_distances = None
+            if self.compare_seqlets:
+                seqlet_distances = np.zeros((n_seqlets, n_seqlets))
+                for i in range(n_seqlets):
+                    for k in range(i + 1, n_seqlets):
+                        distance = min(
+                            1.0,
+                            max(0.0, 1.0 - best_alignment_similarity(
+                                seqlet_pwms[i], seqlet_pwms[k]
+                            )),
+                        )
+                        seqlet_distances[i, k] = seqlet_distances[k, i] = distance
             metric = 'corr'
             annotation_mode = 'Pearson'
 
@@ -344,23 +427,30 @@ class MotifAnnotator:
             options.append(hits)
             names.append(hits[0]['motif'] if hits else 'no match')
 
-        if n_seqlets >= 2:
-            clustering = AgglomerativeClustering(
-                n_clusters=None,
-                distance_threshold=UPGMA_THRESHOLD,
-                metric='precomputed',
-                linkage='average',
-            )
-            labels = clustering.fit_predict(np.clip(seqlet_distances, 0, None))
-        else:
-            labels = np.zeros(n_seqlets, dtype=int)
+        labels = None
+        if self.compare_seqlets:
+            if n_seqlets >= 2:
+                clustering = AgglomerativeClustering(
+                    n_clusters=None,
+                    distance_threshold=UPGMA_THRESHOLD,
+                    metric='precomputed',
+                    linkage='average',
+                )
+                labels = clustering.fit_predict(np.clip(seqlet_distances, 0, None))
+            else:
+                labels = np.zeros(n_seqlets, dtype=int)
         out['motif_names'] = names
         out['motif_options'] = options
-        out['upgma_cluster'] = [f'c{int(label)}' for label in labels]
+        out['upgma_cluster'] = (
+            [f'c{int(label)}' for label in labels]
+            if labels is not None else ['—'] * n_seqlets
+        )
         out.attrs['annotation_mode'] = annotation_mode
         out.attrs['metric'] = metric
         out.attrs['reference_similarity_matrix'] = np.asarray(reference_similarity).tolist()
-        out.attrs['seqlet_distance_matrix'] = seqlet_distances.tolist()
+        out.attrs['seqlet_distance_matrix'] = (
+            seqlet_distances.tolist() if seqlet_distances is not None else None
+        )
         out.attrs['seqlet_pfms'] = [np.asarray(matrix).tolist() for matrix in pfms]
         return out
 

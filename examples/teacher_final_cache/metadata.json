@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-11-10T12:07:50+00:00",
+  "notebook": "sequence_interpretation_teacher_final_executed.ipynb",
+  "notebook_sha256": "55fd702eabffde28b5783fcf584396600d98bcf59a2e2c31ac52c492f65b9ed1",
+  "natural_ranks": [
+    74,
+    51,
+    119,
+    114,
+    150
+  ],
+  "generated_examples": [
+    "HepG2-specific / MDLM gamma0",
+    "K562-specific / MDLM gamma1",
+    "WTC11-specific / MDLM gamma0"
+  ],
+  "removed_generated_examples": [
+    "K562-specific / permutator gamma0",
+    "K562-specific / MDLM gamma0 row 649"
+  ],
+  "figure_style": {
+    "tracks": [
+      "input sequence",
+      "observed ISM",
+      "position-aligned motif logos"
+    ],
+    "figure_width_inches": 14.0,
+    "figure_height_inches": 1.5,
+    "dpi": 300,
+    "prediction_panel": "frameless",
+    "metadata_panel": false,
+    "alignment_note": false,
+    "ism_frame": false,
+    "motif_track_frame": false,
+    "motif_labels": "horizontal below logos"
+  },
+  "task1_consensuses": {
+    "HNF4A": "GGGTTCAAAGTCCAC",
+    "FOSL2/AP-1": "GGATGAGTCATC",
+    "GABPA": "AACCGGAAGTGG",
+    "CREB5": "AATGATGTCAT"
+  }
+}

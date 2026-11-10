@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-11-10T08:58:59Z",
+  "elapsed_seconds": 143.75001168251038,
+  "device": "cuda:1",
+  "python": "3.12.7",
+  "torch": "2.6.0+cu124",
+  "checkpoint_epoch": 42,
+  "model_sha256": "ee1c173865d2b79702cf80f334e18a077c7a757572a16ce1249de73fcb1355b5",
+  "motif_database_sha256": "9a4d40661dd14f9900975c6e90607bda5603568cc58c38b265ecdef7972ed85a",
+  "cell_types": [
+    "HepG2",
+    "K562",
+    "WTC11"
+  ],
+  "annotation_mode": "TOMTOM",
+  "tomtom_jobs": 8,
+  "run_count": 17,
+  "background_sequence": "ATTTGACGGAACAAAACTTTGTCAATACTGATGTAATGATTAATTGAAAGTGTATCCGAAAGGGGAGTCAGACGAAACAATGCACTAAGGAAGATGTTTACAGATATGATGGTTCGCTTAATTGCTCATTCCGAGATAGACGTTGGCTGACCTAGATTAGGCGCAGATCCACAGTGCAATCGGATTCCCTATGTCCTTGT",
+  "background_selection": {
+    "seed": 2026,
+    "candidate_count": 5000,
+    "base_probabilities_ACGT": [
+      0.27,
+      0.23,
+      0.23,
+      0.27
+    ],
+    "selected_candidate_index": 2659,
+    "criterion": "both single-motif variants improve HepG2; combined variant is highest and has strong HepG2-vs-other specificity"
+  },
+  "motifs": {
+    "HNF4A": "GGGTTCAAAGTCCAC",
+    "FOSL2": "GGATGAGTCATC"
+  },
+  "task1_positions_0based": {
+    "HNF4A": 52,
+    "FOSL2": 132
+  },
+  "task5_selection_policy": "At each iteration rank substitutions by hypothetical MinGap HepG2 ISM; evaluate combinations of up to three among the top 18 positions; choose the largest HepG2 prediction while requiring K562 and WTC11 not to exceed their initial predictions."
+}

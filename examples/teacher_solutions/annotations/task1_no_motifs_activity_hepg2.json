@@ -1,0 +1,83 @@
+{
+  "annotation_mode": "TOMTOM",
+  "seqlets": [
+    {
+      "start": 92,
+      "end": 103,
+      "attribution": 0.23423506692051888,
+      "motif_names": "FOXJ2",
+      "motif_options": [
+        {
+          "motif": "FOXJ2",
+          "full_name": "FOXJ2.H14CORE.1.SM.B",
+          "p_value": 6.497243357661446e-05,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "ZSC16",
+          "full_name": "ZSC16.H14CORE.0.PSM.A",
+          "p_value": 0.00013762476148140217,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "FOXK1",
+          "full_name": "FOXK1.H14CORE.0.PS.A",
+          "p_value": 0.00016167924011398956,
+          "metric": "TOMTOM"
+        }
+      ]
+    },
+    {
+      "start": 175,
+      "end": 187,
+      "attribution": 0.25279851257801056,
+      "motif_names": "TSH2",
+      "motif_options": [
+        {
+          "motif": "TSH2",
+          "full_name": "TSH2.H14CORE.0.SG.A",
+          "p_value": 0.0037005694562984863,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "ZN606",
+          "full_name": "ZN606.H14CORE.0.PSG.A",
+          "p_value": 0.003983296455958587,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "SIX1",
+          "full_name": "SIX1.H14CORE.0.P.B",
+          "p_value": 0.0042376052371733315,
+          "metric": "TOMTOM"
+        }
+      ]
+    },
+    {
+      "start": 30,
+      "end": 46,
+      "attribution": 0.7025839574635029,
+      "motif_names": "ONEC2",
+      "motif_options": [
+        {
+          "motif": "ONEC2",
+          "full_name": "ONEC2.H14CORE.3.P.B",
+          "p_value": 1.2255056511984846e-06,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "HNF1A",
+          "full_name": "HNF1A.H14CORE.0.PS.A",
+          "p_value": 0.00016008338346999194,
+          "metric": "TOMTOM"
+        },
+        {
+          "motif": "ZN791",
+          "full_name": "ZN791.H14CORE.0.P.C",
+          "p_value": 0.0003397893926084479,
+          "metric": "TOMTOM"
+        }
+      ]
+    }
+  ]
+}
