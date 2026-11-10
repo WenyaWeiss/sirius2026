@@ -1,27 +1,28 @@
 # Sirius 2026: sequence-to-function interpretation
 
-A self-contained teaching notebook for interpreting Agarwal lentiMPRA
+A self-contained public workshop notebook for interpreting Agarwal lentiMPRA
 sequence-to-function predictions with ISM, seqlets, HOCOMOCO DNA motifs,
-MacroAPE Jaccard similarity, and UPGMA clustering.
+MacroAPE Jaccard similarity, consensus-aware PWM alignment, and UPGMA
+clustering.
 
-The repository contains the exact five example sequences, the real Agarwal
-LegNet checkpoint, the bundled LegNet architecture, the clustered HOCOMOCO
-v14 motif library, and the MacroAPE runner. No Google Drive folder or external
-`mpramnist` checkout is required. An optional
-`annotations/precomputed_macroape.json` cache can be generated on the server
-for the five target-mode examples; it lets Colab reuse MacroAPE results without
-running Java.
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/WenyaWeiss/sirius2026/blob/main/interpretation_workshop.ipynb)
+
+The repository contains the real Agarwal LegNet checkpoint, the bundled LegNet
+architecture, the clustered HOCOMOCO v14 motif library, the MacroAPE runner,
+and the precomputed data/cache used by `interpretation_workshop.ipynb`. No
+Google Drive folder, GitHub token, or external `mpramnist` checkout is required
+for the standard workshop run.
 
 ## Quick start: local clone
 
-For a private repository, authenticate GitHub first (SSH is recommended):
+Clone the public repository:
 
 ```bash
-git clone git@github.com:WenyaWeiss/sirius2026.git
+git clone https://github.com/WenyaWeiss/sirius2026.git
 cd sirius2026
 bash scripts/setup.sh
 source .venv/bin/activate
-jupyter lab sequence_interpretation.ipynb
+jupyter lab interpretation_workshop.ipynb
 ```
 
 `setup.sh` creates `.venv`, installs `requirements.txt`, and registers a
@@ -30,71 +31,80 @@ the second GPU; with one GPU it uses `cuda:0`; otherwise it runs on CPU.
 For a GPU-specific PyTorch build, install the appropriate PyTorch wheel before
 running `scripts/setup.sh` or use the existing conda environment.
 
-## Google Colab
+## Google Colab: пошаговый запуск
 
-The repository is private. Add a fine-grained GitHub token stored in a Colab
-Secret named `GITHUB_TOKEN` (Contents: Read-only for this repository), then
-open the notebook in Colab. Its first code cell clones the repository into
-`/content/sirius2026` (or fast-forwards an existing clone) and switches to that
-directory:
+Репозиторий публичный: `GITHUB_TOKEN`, Colab Secrets и авторизация GitHub для
+запуска не требуются.
+
+### Способ 1 — прямая ссылка
+
+1. Откройте
+   [`interpretation_workshop.ipynb` в Google Colab](https://colab.research.google.com/github/WenyaWeiss/sirius2026/blob/main/interpretation_workshop.ipynb).
+2. Войдите в Google-аккаунт, если Colab попросит это сделать.
+3. Если появится предупреждение о notebook из GitHub, выберите
+   **Run anyway / Всё равно выполнить**.
+4. Выберите **Runtime → Run all** или нажмите `Ctrl+F9`.
+5. Дождитесь последовательного выполнения всех ячеек notebook.
+
+### Что notebook делает автоматически
+
+1. Первая code-cell занимается только синхронизацией публичного repository:
+   - при первом запуске клонирует ветку `main` в `/content/sirius2026`;
+   - при повторном запуске в той же Colab-сессии выполняет
+     `git pull --ff-only origin main`.
+2. Следующая ячейка находит корень синхронизированного проекта.
+3. Отдельная dependency-cell выполняет
+   `pip install -q -r requirements.txt`.
+4. Следующая ячейка импортирует обычные Python-зависимости.
+5. Остальные ячейки загружают model, motifs, annotations и cache из clone и
+   выполняют workshop от начала до конца.
+
+Bootstrap не читает `GITHUB_TOKEN`, `google.colab.userdata` или askpass-файлы.
+Для повторного чистого запуска можно создать новый Colab runtime и снова
+выбрать **Runtime → Run all**.
+
+### Способ 2 — открыть через интерфейс Colab
+
+1. Перейдите на <https://colab.research.google.com/>.
+2. Выберите **File → Open notebook**.
+3. Откройте вкладку **GitHub**.
+4. Вставьте `https://github.com/WenyaWeiss/sirius2026`.
+5. Выберите `interpretation_workshop.ipynb`.
+6. Запустите **Runtime → Run all**.
+
+### Откуда загружаются данные
+
+Стандартный запуск использует файлы непосредственно из публичного GitHub
+clone, в том числе:
+
+- `models/`;
+- `frameworks/`;
+- `motifs/`;
+- `annotations/`;
+- `examples/interpretation_workshop_cache_consensus/`;
+- `examples/teacher_natural_cache/`;
+- `examples/teacher_solutions/`.
+
+Google Drive для стандартного запуска не нужен. Среда `/content` временная;
+чтобы сохранить собственную копию notebook с outputs, выберите
+**File → Save a copy in Drive**.
+
+### Необязательно: дополнительные данные с Google Drive
+
+Если нужны дополнительные большие или приватные файлы, подключите Drive в
+отдельной ячейке после repository-sync cell:
 
 ```python
-from google.colab import userdata
+from google.colab import drive
 from pathlib import Path
-import os
-import subprocess
 
-token = userdata.get("GITHUB_TOKEN")
-if not token:
-    raise RuntimeError("Add GITHUB_TOKEN to Colab Secrets")
-
-askpass = Path("/tmp/github-askpass.sh")
-askpass.write_text("""#!/bin/sh
-case \"$1\" in
-  *Username*) printf '%s\\n' \"$GIT_USERNAME\" ;;
-  *)          printf '%s\\n' \"$GIT_PASSWORD\" ;;
-esac
-""")
-askpass.chmod(0o700)
-env = os.environ.copy()
-env.update({
-    "GIT_ASKPASS": str(askpass),
-    "GIT_USERNAME": "WenyaWeiss",
-    "GIT_PASSWORD": token,
-    "GIT_TERMINAL_PROMPT": "0",
-})
-subprocess.run([
-    "git", "clone",
-    "https://github.com/WenyaWeiss/sirius2026.git",
-    "/content/sirius2026",
-], env=env, check=True)
-
-del token
-del env["GIT_PASSWORD"]
+drive.mount('/content/drive')
+DRIVE_DATA_ROOT = Path('/content/drive/MyDrive/sirius2026_data')
 ```
 
-The first cell performs the clone and `%cd`; run the remaining cells from
-top to bottom. The next executable notebook cell runs
-`!pip install -q -r requirements.txt`,
-so the dependencies are installed before the model imports. The image cells
-load PNGs from the cloned `pics/` directory with `IPython.display.Image`, so
-Colab does not depend on relative Markdown or private GitHub image URLs.
-
-You can open the notebook through the Colab file browser, or use the GitHub
-notebook URL after the repository has been authorized:
-
-<https://colab.research.google.com/github/WenyaWeiss/sirius2026/blob/main/sequence_interpretation.ipynb>
-
-The notebook setup cell finds `/content/sirius2026` automatically. It accepts
-only a complete repository clone containing `vendor/mpramnist`, `utils.py`,
-`sirius_annotation.py`, `models/`, `frameworks/`, and `motifs/`; an older
-`/content/drive/MyDrive/sirius_tutorial` folder is deliberately rejected.
-Google Drive is only mounted as a fallback when no complete local clone is
-found. **MacroAPE is deliberately disabled in Colab:** known sequence+fitness
-entries use the cached ISM arrays and MacroAPE motif matches from
-`annotations/precomputed_macroape.json`; an unknown sequence+fitness runs ISM
-on the selected device (CPU if no GPU is available) and uses tangermeme's
-built-in TOMTOM. No Java process is started in Colab.
+Подключение Drive только делает каталог доступным. Код должен явно читать
+дополнительные файлы из `DRIVE_DATA_ROOT`; текущий workshop продолжает
+использовать versioned данные из `/content/sirius2026`.
 
 ## What the notebook does
 
@@ -109,32 +119,37 @@ built-in TOMTOM. No Java process is started in Colab.
 - clusters seqlets with average-linkage UPGMA at distance threshold `0.95`;
 - in Colab, uses the precomputed MacroAPE cache when available and TOMTOM for
   new sequence+fitness pairs;
-- renders ISM panels with an input one-hot sequence logo and motif-reference tables with both raw and information-content (bits) logos.
+- renders ISM panels with an input one-hot sequence logo and true-width motif
+  PWM logos aligned to the actual DNA by scanning allowed offsets and both
+  forward/reverse-complement orientations; overlapping aligned spans are
+  stacked into vertical lanes.
 
 The notebook contains only lightweight model/orchestration code. Seqlet matrix
 construction, MacroAPE execution, TOMTOM fallback, cache loading, and UPGMA
 clustering are imported from `sirius_annotation.py`.
 
 `tools/ape-3.0.6.jar` and `tools/BatchMacroapeVar.class` are included in the
-private repository. The bundled model architecture is
+repository. The bundled model architecture is
 `vendor/mpramnist/models/MPRALegNet.py`; installing the external `mpramnist`
 package is not required.
 
 ## Repository layout
 
 ```text
-sequence_interpretation.ipynb                     # teaching notebook
+interpretation_workshop.ipynb                     # main public Colab workshop
+sequence_interpretation.ipynb                     # foundational teaching notebook
 sirius_annotation.py                              # MacroAPE/TOMTOM/cache/UPGMA engine
-utils.py                                          # model, example, and ISM utilities
-tutorial_plotting.py                              # all figure/logo rendering
-pics/                                              # notebook illustration sources
-frameworks/                                       # five selected examples
-models/                                            # Agarwal checkpoint
-motifs/                                            # clustered HOCOMOCO v14 MEME
-tools/                                             # MacroAPE jar + runner (local/server)
-annotations/precomputed_macroape.json              # five Colab cache entries
-vendor/mpramnist/                                  # bundled LegNet architecture
-examples/                                          # checked example figures/table
+utils.py                                          # model, ISM, alignment, and rendering utilities
+tutorial_plotting.py                              # shared figure/logo helpers
+pics/                                             # notebook illustration sources
+frameworks/                                       # selected example sequences
+models/                                           # Agarwal checkpoint
+motifs/                                           # clustered HOCOMOCO v14 MEME
+tools/                                            # MacroAPE jar + runner (local/server)
+annotations/precomputed_macroape.json             # reusable MacroAPE cache
+vendor/mpramnist/                                 # bundled LegNet architecture
+examples/interpretation_workshop_cache_consensus/ # workshop figures/annotations
+examples/                                         # checked example data and caches
 scripts/setup.sh                                  # create .venv and install deps
 ```
 
