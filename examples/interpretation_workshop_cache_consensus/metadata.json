@@ -2,7 +2,7 @@
   "schema_version": 1,
   "created_utc": "2026-11-10T13:42:08+00:00",
   "notebook": "interpretation_workshop.ipynb",
-  "notebook_sha256": "0105458932b4d8401e4d47acb14eee566044396cc5591878519ffd38ee793ece",
+  "notebook_sha256": "124b80fc689cbc55adf1b74486f0db8fb51333a60561b0d1e10be0648bb10bb6",
   "motif_alignment": {
     "method": "maximum PWM log-odds against actual DNA",
     "orientations": [
@@ -37,7 +37,7 @@
     2,
     3
   ],
-  "updated_utc": "2026-11-11T06:06:21+00:00",
+  "updated_utc": "2026-11-11T07:23:15+00:00",
   "figure_style": {
     "motif_fill_color": "#BAE6FD",
     "motif_accent_color": "#0284C7",
