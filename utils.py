@@ -220,6 +220,18 @@ def run_ism(
     return result
 
 
+def load_precomputed_ism_cache(path: str | Path) -> dict:
+    """Load sequence/fitness ISM entries from the portable JSON cache."""
+    import json
+
+    payload = json.loads(Path(path).read_text())
+    return {
+        (str(entry['sequence']), str(entry['fitness'])): entry['ism']
+        for entry in payload.get('entries', {}).values()
+        if entry.get('ism') is not None
+    }
+
+
 def get_precomputed_record(
     sequence: str,
     fitness_name: str,
