@@ -2,7 +2,7 @@
   "schema_version": 1,
   "created_utc": "2026-11-10T13:42:08+00:00",
   "notebook": "interpretation_workshop.ipynb",
-  "notebook_sha256": "22e443b3967b4d43b76436f5cef85aa8868047f8b94ef19e58efd5e87b7a0f7e",
+  "notebook_sha256": "4e7f4de8450d0491aa97560705e980cf0a0aec93c5533b8c5d2e34dfbbe8280a",
   "motif_alignment": {
     "method": "maximum PWM log-odds against actual DNA",
     "orientations": [
@@ -35,7 +35,18 @@
   "visible_assignment_order": [
     1,
     2,
-    3,
-    5
-  ]
+    3
+  ],
+  "updated_utc": "2026-11-11T05:32:35+00:00",
+  "figure_style": {
+    "motif_fill_color": "#BAE6FD",
+    "motif_accent_color": "#0284C7",
+    "motif_label": "name only",
+    "motif_label_fontsize_pt": 8,
+    "show_seqlet_id": false,
+    "show_coordinates": false,
+    "show_alignment_strand": false,
+    "show_similarity_score": false,
+    "prediction_panel_title": "Предсказания модели"
+  }
 }

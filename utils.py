@@ -1552,7 +1552,8 @@ def render_position_aligned_macroape_logo(
         for spine in ism_axis.spines.values():
             spine.set_visible(False)
 
-    seqlet_colors = plt.get_cmap('tab10')
+    motif_fill_color = '#BAE6FD'
+    motif_accent_color = '#0284C7'
     selected_seqlets = sorted(set(map(int, hits['seqlet_index'])))
     payload_seqlets = annotation_payload.get('seqlets', [])
     motif_by_seqlet = (
@@ -1568,9 +1569,8 @@ def render_position_aligned_macroape_logo(
     for seqlet_index in selected_seqlets:
         seqlet = payload_seqlets[seqlet_index]
         start, end = int(seqlet['start']), int(seqlet['end'])
-        color = seqlet_colors(seqlet_index % 10)
         for axis in (sequence_axis, ism_axis):
-            axis.axvspan(start, end, color=color, alpha=.15)
+            axis.axvspan(start, end, color=motif_fill_color, alpha=.55)
         ism_axis.text(
             (start + end) / 2,
             (
@@ -1578,22 +1578,15 @@ def render_position_aligned_macroape_logo(
                 if horizontal_labels
                 else .97 - .11 * (seqlet_index % 3)
             ),
-            (
-                f'S{seqlet_index + 1} {motif_by_seqlet[seqlet_index]} '
-                f'[{start}:{end}]'
-            ),
-            color=color,
-            fontsize=6 if horizontal_labels else 7,
+            str(motif_by_seqlet[seqlet_index]),
+            color=motif_accent_color,
+            fontsize=8,
             ha='center',
             va='bottom' if horizontal_labels else 'top',
             rotation=0 if horizontal_labels else 32,
             transform=ism_axis.get_xaxis_transform(),
         )
 
-    motif_palette = plt.get_cmap('tab10')
-    motif_color_index = {
-        motif.upper(): index for index, motif in enumerate(present_motifs)
-    }
     for row_index, (track_label, motif_hits, lane_count) in enumerate(track_groups):
         track = figure.add_subplot(left[2 + row_index, 0], sharex=sequence_axis)
         track.set_xlim(0, len(sequence))
@@ -1632,7 +1625,7 @@ def render_position_aligned_macroape_logo(
                 ha='center',
                 va='center',
                 fontsize=7,
-                color='#64748b',
+                color=motif_accent_color,
             )
         for hit_index, hit in motif_hits.iterrows():
             start, end = int(hit['start']), int(hit['end'])
@@ -1644,9 +1637,12 @@ def render_position_aligned_macroape_logo(
             slot_bottom = .05 + lane * slot_height
             inset_y = slot_bottom + .16 * slot_height
             inset_height = .78 * slot_height
-            color_index = motif_color_index[str(hit['motif']).upper()]
-            color = motif_palette(color_index % 10)
-            track.axvspan(start, end, color=color, alpha=.12)
+            track.axvspan(
+                start,
+                end,
+                color=motif_fill_color,
+                alpha=.55,
+            )
             inset = track.inset_axes([
                 logo_start / len(sequence),
                 inset_y,
@@ -1657,8 +1653,8 @@ def render_position_aligned_macroape_logo(
             inset.axvspan(
                 max(-.5, start - logo_start - .5),
                 min(motif_length - .5, end - logo_start - .5),
-                color=color,
-                alpha=.12,
+                color=motif_fill_color,
+                alpha=.55,
                 zorder=0,
             )
             matrix = alignment_matrices[hit_index]
@@ -1674,22 +1670,9 @@ def render_position_aligned_macroape_logo(
             inset.set_xticks([])
             inset.set_yticks([])
             for spine in inset.spines.values():
-                spine.set_color(color)
+                spine.set_color(motif_accent_color)
                 spine.set_linewidth(1.1)
-            strand = '+' if hit['logo_strand'] == '+' else '−'
-            metric = str(hit.get('metric', 'Jaccard')).lower()
-            display_value = hit.get('display_value', hit['similarity'])
-            if pd.isna(display_value):
-                display_value = hit['similarity']
-            if metric == 'tomtom':
-                score_label = f'p={float(display_value):.1e}'
-            elif metric in {'corr', 'pearson'}:
-                score_label = f'r={float(hit["similarity"]):.3f}'
-            else:
-                score_label = f'J={float(hit["similarity"]):.3f}'
-            label = f'{strand} · {score_label}'
-            if single_motif_track:
-                label = f"{hit['motif']} {label}"
+            label = str(hit['motif'])
             if horizontal_labels:
                 track.text(
                     (logo_start + logo_end) / 2,
@@ -1698,8 +1681,8 @@ def render_position_aligned_macroape_logo(
                     transform=track.get_xaxis_transform(),
                     ha='center',
                     va='bottom',
-                    fontsize=5,
-                    color='#111827',
+                    fontsize=8,
+                    color=motif_accent_color,
                     clip_on=False,
                 )
             else:
@@ -1710,8 +1693,8 @@ def render_position_aligned_macroape_logo(
                     transform=inset.transAxes,
                     ha='center',
                     va='bottom',
-                    fontsize=6,
-                    color='#111827',
+                    fontsize=8,
+                    color=motif_accent_color,
                     clip_on=False,
                 )
 
@@ -1733,7 +1716,7 @@ def render_position_aligned_macroape_logo(
             else '#16a34a'
             for name in cell_lines
         ]
-        prediction_axis.set_title('Predictions', fontsize=8)
+        prediction_axis.set_title('Предсказания модели', fontsize=8)
         span = max(
             float(values.max() - values.min()),
             float(np.max(np.abs(values))),
